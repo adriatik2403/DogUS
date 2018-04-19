@@ -51,6 +51,7 @@ var dogController = function (){
 
     var dog_name = req.body.dog_name;
     var dog_age = req.body.dog_age;
+    var dog_birthday = req.body.dog_birthday;
     var dog_weight = req.body.dog_weight;
     var dog_description = req.body.dog_description;
     var dog_color = '#' + req.body.dog_color;
@@ -60,6 +61,7 @@ var dogController = function (){
       name: dog_name,
       owner_email: req.user.local.email,
       age: dog_age,
+      birthday: dog_birthday,
       weight: dog_weight,
       description: dog_description,
       color: dog_color,
@@ -83,6 +85,7 @@ var dogController = function (){
 
     var dog_name = req.body.dog_name;
     var dog_age = req.body.dog_age;
+    var dog_birthday = req.body.dog_birthday;
     var dog_weight = req.body.dog_weight;
     var dog_description = req.body.dog_description;
     var dog_color = '#' + req.body.dog_color;
@@ -93,6 +96,7 @@ var dogController = function (){
     var updatedDog = {
       name: dog_name,
       age: dog_age,
+      birthday: dog_birthday,
       weight: dog_weight,
       description: dog_description,
       color: dog_color,

@@ -1,2 +1,10 @@
 CODE interface/node_modules/**
 CODE interface/\.idea/
+
+CODE_interface/\.idea/
+
+Embedded Code Keil/\.DS_Store
+
+SUIVIS/SUIVI_2/\.DS_Store
+
+SUIVIS/\.DS_Store
