@@ -1,0 +1,286 @@
+<!doctype html>
+<html>
+<head>
+    <title>DogUS</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> <!-- load bootstrap css -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> <!-- load fontawesome -->
+
+</head>
+
+<body onload="init()">
+  <div>
+    <% include navbar.ejs %>
+    <% include sidebar.ejs %>
+
+    <script>
+      $( "a[dogid='<%= dog_id %>']" ).trigger( "click" );
+    </script>
+
+    <br/>
+
+    <h1>Track your animal with GPS</h1>
+
+
+    <!-- Map and Side Panel -->
+    <div class="row content" style="margin-left: 0px; margin-right: 0px;">
+
+        <!-- Google Map -->
+        <div class="col-md-10" style="margin-left: 255px; position: inherit;">
+			<div class="panel panel-default">
+					<!-- Panel Title -->
+					<div class="panel-heading">
+						<h2 class="panel-title text-center">Track your animal! <span class="glyphicon glyphicon-map-marker"></h2>
+					</div>
+					<!-- Panel MAP -->
+					<div class="panel-body">
+						<div id="map" style="width:100%;height:500px"></div>
+					</div>
+          <!-- Bottom Panel -->
+                  <!-- Panel Body -->
+                  <div class="panel-body">
+                          <button class="btn btn-danger btn-block" onclick="viewTrip()">View Trip!</button>
+                          <button class="btn btn-danger btn-block" onclick="refreshMarker()">Refresh</button>
+                          <button class="btn btn-danger btn-block" onclick="drawOnMap()">Edit zone</button>
+                  </div>
+
+				</div>
+        </div>
+
+
+    </div>
+  </div>
+
+
+
+  <script>
+  var map;
+  var marker;
+  var dogImage = '/img/dogMarker2.png';
+  var noMap = '/img/noMap.jpg';
+  var editMode;
+  var drawingManager;
+  var circle;
+  var latitude;
+  var longitude;
+  var savedShape;
+  var dogName;
+  var timestamp;
+  var address;
+  var infowindow;
+  var geocoder;
+  var markerString;
+
+  function init() {
+    editMode = false;
+    latitude = <%= lastPosition.latitude %>;
+    longitude = <%= lastPosition.longitude %>;
+    dogName = '<%= selected_dog.name %>';
+    timestamp =  '<%= lastPosition.timestamp %>';
+    initMap();
+    initShape();
+    //setInterval(refreshMarker, 5000);
+  }
+
+  function initShape(){
+    var gpsZone = <%- JSON.stringify(gpsZone) %>;
+    if (gpsZone) {
+      savedShape = new google.maps.Circle({
+        map: map,
+        center: gpsZone.center,
+        radius: gpsZone.radius,
+          editable: true
+      });
+      google.maps.event.addListener(savedShape, 'radius_changed', onRadiusChange);
+      google.maps.event.addListener(savedShape, 'center_changed', onCenterChange);
+    }
+  }
+
+  function drawOnMap() {
+    editMode = !editMode;
+    drawingManager.setOptions({
+      drawingControl: editMode
+    });
+  }
+
+  function deleteShape(){
+    savedShape.setMap(null);
+    savedShape = null;
+  }
+
+  function refreshMarker() {
+    $.get("/track/lastPosition/<%= dog_id %>", function(data, status){
+        if (status == "success") {
+          if (latitude != data.latitude || longitude != data.longitude) {
+            // document.getElementById("latitude").value = data.latitude;
+            // document.getElementById("longitude").value = data.longitude;
+            if (latitude == "null" || longitude == "null"){
+              // latitude = document.getElementById("latitude").value;
+              // longitude = document.getElementById("longitude").value;
+              latitude = data.latitude;
+              longitude = data.longitude;
+              initMap();
+            }
+            latitude = data.latitude;
+            longitude = data.longitude;
+            var myLatLng = new google.maps.LatLng(latitude, longitude);
+
+            marker.setMap(null);
+            marker = new google.maps.Marker({
+              position: myLatLng,
+              map: map,
+              icon: dogImage
+            });
+
+            marker.setMap(map);
+
+            geocoder.geocode({
+                'latLng': myLatLng
+              }, function (results, status) {
+                if (status === google.maps.GeocoderStatus.OK) {
+                  if (results[1]) {
+                    address = results[1].formatted_address;
+                    markerString = '<div id="content">'+
+                       '<div id="siteNotice">'+
+                       '</div>'+
+                       '<div id="bodyContent">'+
+                       '<p><b>' + dogName + '</b></p>'+
+                       '<p>Adress: ' + address + '<br>' +
+                       'Last GPS update: ' + timestamp + '</p>'+
+                       '</div>'+
+                       '</div>';
+
+                   infowindow = new google.maps.InfoWindow({
+                     content: markerString
+                   });
+                   marker.addListener('click', function() {
+                     infowindow.open(map, marker);
+                   });
+
+                  } else {
+                    console.log('No results found');
+                  }
+                } else {
+                  console.log('Geocoder failed due to: ' + status);
+                }
+              });
+
+          }
+        }
+    });
+  }
+
+  // function addGpsPosition() {
+  //   var newLatitude = document.getElementById("latitude").value;;
+  //   var newLongitude = document.getElementById("longitude").value;
+  //   var now = Date.now();
+  //   $.post("/track/addGpsPosition/<%= dog_id %>", {timestamp : now, lat: newLatitude, lng: newLongitude}, function(data, status){
+  //   });
+  // }
+  //
+  //   function viewTrip() {
+  //     $.get("/track/loadTrip/<%= dog_id %>", function(data, status){
+  //         //alert("Data: " + data + "\nStatus: " + status);
+  //     });
+  //   }
+
+    function initMap() {
+      if (latitude & longitude) {
+        geocoder = new google.maps.Geocoder();
+        var myLatLng = new google.maps.LatLng(latitude, longitude);
+        var mapCanvas = document.getElementById("map");
+        var mapOptions = {
+        center: myLatLng, zoom: 18
+        };
+
+         map = new google.maps.Map(mapCanvas, mapOptions);
+
+         marker = new google.maps.Marker({
+            position: myLatLng,
+            title: 'The Dog Name!',
+            icon: dogImage
+         });
+         marker.setMap(map);
+
+        geocoder.geocode({
+            'latLng': myLatLng
+          }, function (results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+              if (results[1]) {
+                address = results[1].formatted_address;
+                markerString = '<div id="content">'+
+                   '<div id="siteNotice">'+
+                   '</div>'+
+                   '<div id="bodyContent">'+
+                   '<p><b>' + dogName + '</b></p>'+
+                   '<p>Adress: ' + address + '<br>' +
+                   'Last GPS update: ' + timestamp + '</p>'+
+                   '</div>'+
+                   '</div>';
+
+               infowindow = new google.maps.InfoWindow({
+                 content: markerString
+               });
+               marker.addListener('click', function() {
+                 infowindow.open(map, marker);
+               });
+
+              } else {
+                console.log('No results found');
+              }
+            } else {
+              console.log('Geocoder failed due to: ' + status);
+            }
+          });
+
+
+         drawingManager = new google.maps.drawing.DrawingManager({
+         drawingControl: editMode,
+         drawingControlOptions: {
+           position: google.maps.ControlPosition.TOP_CENTER,
+           drawingModes: [
+             google.maps.drawing.OverlayType.CIRCLE
+           ]
+         },
+         circleOptions: {
+           editable: true
+         }
+       });
+       drawingManager.setMap(map);
+       google.maps.event.addListener(drawingManager, 'circlecomplete', onShapeComplete);
+      } else {
+        document.getElementById('map').innerHTML = '<img src="/img/noMap.jpg" style="width:100%;height:500px"/>';
+      }
+
+    }
+
+    function onCenterChange(){
+      sendShapeToDB(savedShape);
+    }
+
+    function onRadiusChange(){
+      sendShapeToDB(savedShape);
+    }
+
+    function onShapeComplete(shape) {
+      drawingManager.setOptions({drawingMode: null});
+
+      if(savedShape){
+        deleteShape();
+      }
+      savedShape = shape;
+      google.maps.event.addListener(savedShape, 'radius_changed', onRadiusChange);
+      google.maps.event.addListener(savedShape, 'center_changed', onCenterChange);
+      sendShapeToDB(savedShape);
+    }
+
+    function sendShapeToDB(shape){
+      $.post("/track/changeGpsZone/<%= dog_id %>", {center : JSON.stringify(shape.center), radius : shape.radius},function(data, status){
+        });
+    }
+
+		</script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDiJeySB5_JKsubA2Hk8QQgZlfp85kvAhg&libraries=drawing"></script>
+
+
+</body>
+</html>

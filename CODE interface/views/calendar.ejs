@@ -1,0 +1,97 @@
+<!doctype html>
+<head>
+    <title>DogUS-Calendar</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> <!-- load bootstrap css -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> <!-- load fontawesome -->
+
+    <script src="/js/calendar/dhtmlxscheduler.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="/css/calendar/dhtmlxscheduler.css">
+
+</head>
+
+
+<style type="text/css" >
+    body {
+        margin-top: 125px;
+        margin-right: 25px;
+        margin-bottom: 25px;
+        margin-left: 250px;
+        overflow: hidden;
+    }
+
+    .formAdd {
+        max-width: 385px;
+    }
+
+    .dhx_cal_event.dog_event div{
+        background-color: <%= dog.color %> !important;
+    }
+    .dhx_cal_event.all_event div{
+        background-color: #4286f4 !important;
+    }
+
+</style>
+
+<script type="text/javascript" charset="utf-8">
+    function init() {
+        scheduler.config.xml_date="%Y-%m-%d %H:%i";
+        scheduler.init('scheduler_here',new Date(),"week");
+
+        scheduler.templates.xml_date = function(value){ return new Date(value); };
+        scheduler.load("/calendar/load/events?dog_id=<%= dog._id %>", "json");
+
+        scheduler.config.xml_date="%Y-%m-%d %H:%i";
+
+        var dp = new dataProcessor("/calendar/update/events?dog_id=<%= dog._id %>");
+        dp.init(scheduler);
+        dp.setTransactionMode("POST", false);
+    }
+
+    scheduler.templates.event_class = function (start, end, event) {
+        if(event.dog_id === 'all') {
+            return "all_event"
+        } else {
+            return "dog_event";
+        }
+    };
+</script>
+
+<body onload="init();">
+    <div>
+        <% include navbar.ejs %>
+        <% include sidebar.ejs %>
+        <script>
+          $( "a[dogid='<%= dog_id %>']" ).trigger( "click" );
+        </script>
+
+        <h1>Schedule your animals outings!</h1>
+
+        <!-- Calendar -->
+        <div class="row content">
+            <div class="panel panel-default">
+                <!-- Panel Title -->
+                <div class="panel-heading">
+                    <h2 class="panel-title text-center"><%= dog.name %>'s Calendar</h2>
+                </div>
+                <!-- Panel Body -->
+                <div class="panel-body">
+                      <div id="scheduler_here" class="dhx_cal_container" style='width:100%;height:450px'>
+                             <div class="dhx_cal_navline">
+                                 <!-- <div class="dhx_cal_prev_button">&nbsp;</div>
+                                  <div class="dhx_cal_next_button">&nbsp;</div>
+                                  <div class="dhx_cal_today_button"></div> -->
+                                  <div class="dhx_cal_date"></div>
+                                 <!-- <div class="dhx_cal_tab" name="day_tab" style="right:204px;"></div> -->
+                                 <!--  <div class="dhx_cal_tab" name="week_tab" style="right:140px;"></div> -->
+                                 <!-- <div class="dhx_cal_tab" name="month_tab" style="right:76px;"></div> -->
+                              </div>
+                          <div class="dhx_cal_header">
+                          </div>
+                          <div class="dhx_cal_data">
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </body>

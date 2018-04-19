@@ -1,0 +1,64 @@
+<head>
+  <link rel="stylesheet" type="text/css" href="/css/sidebar.css">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+</head>
+
+
+<ul class="goo-collapsible">
+  <% for(var i=0; i < users_dog.length; i++) { %>
+  	<li class="dropdown">
+        <a class="" dogid="<%= users_dog[i]._id %>" href="#">
+            <div class="circle" style="background-color: <%= users_dog[i].color %>">
+            </div>
+            <%= users_dog[i].name %>
+        </a>
+      <ul>
+        <li><a href="/track/dog/<%= users_dog[i]._id %>">Track</a></li>
+        <li><a href="/infos/<%= users_dog[i]._id %>">Informations</a></li>
+        <li><a href="/calendar/<%= users_dog[i]._id %>">Calendar</a></li>
+  		</ul>
+  	</li>
+  <% } %>
+
+    <% if(users_dog.length != 0) { %>
+        <li class="dropdown">
+            <a class="" dogid="all" href="#">
+                <div class="circle" style="background-color: #4286f4">
+                </div>
+                All
+            </a>
+            <ul>
+                <li><a href="/track/all">Track</a></li>
+        <!--    <li><a href="/infos/all">Informations</a></li>  -->
+                <li><a href="/calendar/all">Calendar</a></li>
+            </ul>
+        </li>
+    <% } %>
+
+  <li><a class="" href="/addanimal">Add Animal + </a></li>
+
+</ul>
+
+<script>
+$(".goo-collapsible > li > a").on("click", function(e){
+
+    //if submenu is hidden, does not have active class
+	if(!$(this).hasClass("active")) {
+
+    	// hide any open menus and remove active classes
+		$(".goo-collapsible li ul").slideUp(350);
+		$(".goo-collapsible li a").removeClass("active");
+
+		// open submenu and add the active class
+		$(this).next("ul").slideDown(350);
+		$(this).addClass("active");
+
+    //if submenu is visible
+	}else if($(this).hasClass("active")) {
+
+        //hide submenu and remove active class
+		$(this).removeClass("active");
+		$(this).next("ul").slideUp(350);
+	}
+});
+</script>
